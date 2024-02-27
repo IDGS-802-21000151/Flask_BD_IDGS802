@@ -18,6 +18,7 @@
 {% endwith %}
 
 <form action="/alumnos" method="POST" novalidate>
+  <h1 class="display-1">Registrate en BD</h1>
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   {{ macros.input_Form(form.nombre, class="form-control") }}
   {{ macros.input_Form(form.primerApellido, class="form-control") }}

@@ -2,6 +2,7 @@ from flask import Flask, request, render_template
 from flask_wtf.csrf import CSRFProtect
 from config import DevelopmentConfig
 from models import db
+from models import Alumnos
 from flask import flash
 
 import forms
@@ -14,29 +15,46 @@ csrf = CSRFProtect()
 def page_not_found(e):
     return render_template("404.html")
 
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
 def cargarIndex():
-    return render_template("index.html")
+    formRegistro = forms.UserForm(request.form)
+    
+    if request.method == "POST" and formRegistro.validate():
+        alumno = Alumnos(nombre = formRegistro.nombre.data,
+                        primerApellido = formRegistro.primerApellido.data,
+                        email = formRegistro.email.data)
+        
+        #Insert into alumnos values()
+        db.session.add(alumno)
+        db.session.commit()
+    
+    return render_template("index.html", formRegistro = formRegistro)
 
 @app.route("/alumnos", methods=["GET", "POST"])
 def cargarAlumnos():
-    alumno_form = forms.UserForm(request.form)
-    
-    if request.method == "POST" and alumno_form.validate():
-        nombre = alumno_form.nombre.data
-        primerApellido = alumno_form.primerApellido
-        segundoApellido = alumno_form.segundoApellido
+    alumnos = Alumnos.query.all()
         
-        mensaje = f"Bienvenido: {nombre}"
+    return render_template("ABC_Completo.html", alumnos = alumnos)
+
+@app.route("/alumnos/edit/<int:idAlumno>", methods=["GET"])
+def editarAlumno(idAlumno):
+    alumno = Alumnos.query.get(idAlumno)
         
-        flash(mensaje)
+    return render_template("editarAlumno.html", alumno = alumno)
+
+@app.route("/alumnos", methods=["DELETE"])
+def eliminarAlumno():
+    alumnos = Alumnos.query.all()
         
-    return render_template("alumnos.html", form = alumno_form)
+    return render_template("ABC_Completo.html", alumnos = alumnos)
 
 # Método Main
 if __name__ == "__main__":
     csrf.init_app(app)
     db.init_app(app)
+    
     with app.app_context():
+        db.drop_all()
         db.create_all()
+        
     app.run()
